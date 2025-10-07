@@ -1,4 +1,3 @@
-# crud.py
 from sqlalchemy.orm import Session
 import models, schemas
 from auth import get_password_hash, verify_password
