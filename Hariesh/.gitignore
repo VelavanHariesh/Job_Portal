@@ -14,7 +14,6 @@ env/
 # --- FastAPI / Logs ---
 *.log
 *.pid
-
 # --- Environment Variables ---
 .env
 

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome | Job Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="welcomeContainer">
+        <h1 id="welcomeMessage">Loading...</h1>
+        <button id="logoutBtn">Logout</button>
+    </div>
+
+    <script src="home.js"></script>
+</body>
+</html>
+
+
+
+<script>
+    const backendUrl = "http://127.0.0.1:8000";
+
+async function loadUser() {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        alert("You must log in first!");
+        window.location.href = "login.html"; // redirect to login
+        return;
+    }
+
+    try {
+        const response = await fetch(`${backendUrl}/users/me`, {
+            headers: { "Authorization": `Bearer ${token}` },
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch user info");
+        }
+
+        const user = await response.json();
+        document.getElementById("welcomeMessage").textContent = `Welcome, ${user.full_name}! 👋`;
+    } catch (err) {
+        console.error(err);
+        alert("Session expired. Please log in again.");
+        localStorage.removeItem("token");
+        window.location.href = "login.html";
+    }
+}
+
+// ---------------- LOGOUT ----------------
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("token"); // remove JWT
+    alert("You have been logged out!");
+    window.location.href = "login.html"; // redirect to login page
+});
+
+loadUser();
+
+</script>

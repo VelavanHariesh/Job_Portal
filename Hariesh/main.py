@@ -1,6 +1,7 @@
 # main.py
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles 
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
@@ -22,6 +23,11 @@ def get_db():
 
 # ------------------- APP & CORS -------------------
 app = FastAPI(title="Job Portal Authentication")
+
+
+# --------------------------------------------------------
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
 
 # Add CORS middleware to allow requests from your frontend
 origins = [
