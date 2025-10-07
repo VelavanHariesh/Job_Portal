@@ -1,0 +1,32 @@
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# --- Virtual Environment ---
+venv/
+env/
+.venv/
+
+# --- FastAPI / Logs ---
+*.log
+*.pid
+
+# --- Environment Variables ---
+.env
+
+# --- IDE / Editor Files ---
+.vscode/
+.idea/
+
+# --- OS Generated Files ---
+.DS_Store
+Thumbs.db
+
+# --- Node / Frontend (if using JS packages) ---
+node_modules/
+dist/
+build/
