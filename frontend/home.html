@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome | Job Portal</title>
+    <title>Home | Job Portal</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,43 +12,46 @@
         <button id="logoutBtn">Logout</button>
     </div>
 
-    <script src="home.js"></script>
+    <script>
+        const backendUrl = "http://127.0.0.1:8000";
+
+        // ------------------- SHOW CURRENT USER -------------------
+        async function showUser() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                window.location.href = "login.html"; // redirect if not logged in
+                return;
+            }
+
+            try {
+                const res = await fetch(`${backendUrl}/users/me`, {
+                    headers: { "Authorization": `Bearer ${token}` },
+                });
+
+                if (!res.ok) {
+                    throw new Error("Failed to fetch user");
+                }
+
+                const user = await res.json();
+                document.getElementById("welcomeMessage").innerText = `Welcome, ${user.full_name}!`;
+            } catch (err) {
+                console.error(err.message);
+                localStorage.removeItem("token"); // clear invalid token
+                window.location.href = "login.html"; // redirect to login
+            }
+        }
+
+        // Call this on page load
+        showUser();
+
+        // ------------------- LOGOUT -------------------
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) {
+            logoutBtn.addEventListener("click", () => {
+                localStorage.removeItem("token");
+                window.location.href = "login.html";
+            });
+        }
+    </script>
 </body>
 </html>
-
-
-
-<script>
-   async function showUser() {
-    const token = localStorage.getItem("token");
-    if (!token) {
-        window.location.href = "login.html"; // redirect if not logged in
-        return;
-    }
-
-    try {
-        const res = await fetch("http://127.0.0.1:8000/users/me", {
-            headers: { "Authorization": `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error("Failed to fetch user");
-
-        const user = await res.json();
-        document.getElementById("welcomeMsg").innerText = `Welcome, ${user.full_name}!`;
-    } catch (err) {
-        console.error(err.message);
-        localStorage.removeItem("token"); // clear invalid token
-        window.location.href = "login.html"; // redirect to login
-    }
-}
-
-// Call this on page load
-showUser();
-
-// Logout button
-document.getElementById("logoutBtn").addEventListener("click", () => {
-    localStorage.removeItem("token");
-    window.location.href = "login.html";
-});
-
-
-</script>

@@ -1,87 +1,130 @@
+// script.js
+
 const container = document.querySelector('.container');
-const registerBtn = document.querySelector('.register-btn')
-const loginBtn = document.querySelector('.login-btn')
-
-registerBtn.addEventListener('click', () => {
-    container.classList.add('active');
-})
-
-loginBtn.addEventListener('click', () => {
-    container.classList.remove('active');
-})
+const registerBtn = document.querySelector('.register-btn');
+const loginBtn = document.querySelector('.login-btn');
 const backendUrl = "http://127.0.0.1:8000";
 
-// ------------------- LOGIN -------------------
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+// ------------------- SWITCH LOGIN / REGISTER UI -------------------
+if (registerBtn && loginBtn && container) {
+  registerBtn.addEventListener('click', () => container.classList.add('active'));
+  loginBtn.addEventListener('click', () => container.classList.remove('active'));
+}
 
-    const formData = new URLSearchParams();
-    formData.append("username", email);
-    formData.append("password", password);
+// ------------------- LOGIN -------------------
+const loginForm = document.getElementById("loginForm");
+if (loginForm) {
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+
+    if (!emailInput || !passwordInput) {
+      alert("Input fields not found");
+      return;
+    }
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!email || !password) {
+      alert("Please enter email and password");
+      return;
+    }
 
     try {
-        const response = await fetch(`${backendUrl}/token`, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: formData,
-        });
+      const response = await fetch(`${backendUrl}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }), // match UserLogin model
+      });
 
-        if (!response.ok) throw new Error("Login failed!");
+      const data = await response.json();
 
-        const data = await response.json();
-        localStorage.setItem("token", data.access_token);
-        
-        // Navigate to home page after successful login
-        window.location.href = "home.html";  // <-- put your home/dashboard page here
+      if (!response.ok) {
+        // Handle validation errors from backend (422)
+        if (Array.isArray(data.detail)) {
+          throw new Error(data.detail.map(d => d.msg).join(", "));
+        } else {
+          throw new Error(data.detail || "Login failed!");
+        }
+      }
+
+      // Save token and redirect
+      localStorage.setItem("token", data.access_token);
+      window.location.href = "home.html"; 
+    // alert("Login successful!");
     } catch (err) {
-        alert(err.message);
+      alert(err.message);
+      passwordInput.value = ""; // clear password field
     }
-});
-
+  });
+}
 
 // ------------------- REGISTER -------------------
-document.getElementById("registerForm").addEventListener("submit", async (e) => {
+const registerForm = document.getElementById("registerForm");
+if (registerForm) {
+  registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = document.getElementById("regEmail").value;
-    const password = document.getElementById("regPassword").value;
-    const full_name = document.getElementById("username").value;
+
+    const email = document.getElementById("regEmail").value.trim();
+    const password = document.getElementById("regPassword").value.trim();
+    const full_name = document.getElementById("username").value.trim();
+
+    if (!email || !password || !full_name) {
+      alert("Please fill in all fields");
+      return;
+    }
 
     try {
-        const response = await fetch(`${backendUrl}/register`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password, full_name }),
-        });
+      const response = await fetch(`${backendUrl}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, full_name }), 
+      });
 
-        if (!response.ok) throw new Error("Registration failed!");
+      const data = await response.json();
 
-        const data = await response.json();
-        alert(`User registered! Email: ${data.email}`);
-        console.log("Registered user:", data);
+      if (!response.ok) {
+        if (Array.isArray(data.detail)) {
+          throw new Error(data.detail.map(d => d.msg).join(", "));
+        } else {
+          throw new Error(data.detail || "Registration failed!");
+        }
+      }
+
+      alert(`User registered successfully!`);
+      container?.classList.remove('active'); // switch to login
     } catch (err) {
-        alert(err.message);
+      alert(err.message);
     }
-});
+  });
+}
 
 // ------------------- GET CURRENT USER -------------------
 async function getCurrentUser() {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+  const token = localStorage.getItem("token");
+  if (!token) return;
 
-    try {
-        const res = await fetch(`${backendUrl}/users/me`, {
-            headers: { "Authorization": `Bearer ${token}` },
-        });
+  try {
+    const res = await fetch(`${backendUrl}/users/me`, {
+      headers: { "Authorization": `Bearer ${token}` },
+    });
 
-        if (!res.ok) throw new Error("Failed to fetch user");
+    const data = await res.json();
 
-        const data = await res.json();
-        console.log("Logged-in user:", data);
-        // Optionally display user info on page
-        alert(`Welcome ${data.full_name}!`);
-    } catch (err) {
-        console.error(err.message);
+    if (!res.ok) {
+      if (Array.isArray(data.detail)) {
+        throw new Error(data.detail.map(d => d.msg).join(", "));
+      } else {
+        throw new Error(data.detail || "Failed to fetch user");
+      }
     }
+
+    console.log("Logged-in user:", data);
+    alert(`Welcome ${data.full_name || data.email}!`);
+  } catch (err) {
+    console.error(err.message);
+  }
 }

@@ -7,7 +7,11 @@ def get_user_by_email(db: Session, email: str):
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_pw = get_password_hash(user.password)
-    db_user = models.User(email=user.email, full_name=user.full_name, hashed_password=hashed_pw)
+    db_user = models.User(
+        email=user.email,
+        full_name=user.full_name,
+        hashed_password=hashed_pw
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
